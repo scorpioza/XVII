@@ -29,6 +29,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.BatteryManager
@@ -39,6 +40,8 @@ import android.provider.MediaStore
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -53,8 +56,11 @@ import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.background.longpoll.receivers.RestarterBroadcastReceiver
 import com.twoeightnine.root.xvii.background.longpoll.services.NotificationService
 import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
+import com.twoeightnine.root.xvii.chats.messages.chat.usual.ChatActivity
 import com.twoeightnine.root.xvii.crypto.md5
 import com.twoeightnine.root.xvii.lg.L
+import com.twoeightnine.root.xvii.main.MainActivity
+import com.twoeightnine.root.xvii.uikit.Munch
 import global.msnthrp.xvii.uikit.extensions.SimpleBitmapTarget
 import global.msnthrp.xvii.uikit.extensions.load
 import io.reactivex.Completable
@@ -67,7 +73,7 @@ import java.text.DecimalFormat
 import java.util.regex.Pattern
 
 
-private const val REGEX_MENTION = "(\\[id\\d{1,9}\\|[^\\]]+\\])"
+private const val REGEX_MENTION = "(\\[id\\d{1,9}\\|[^\\]]+\\]|#+[a-zA-Z0-9а-яА-ЯёЁ_@]{1,})"
 
 fun isOnline(): Boolean {
     val cm = App.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -259,7 +265,7 @@ fun goHome(context: Context?) {
     })
 }
 
-fun wrapMentions(context: Context, text: CharSequence, addClickable: Boolean = false): SpannableStringBuilder {
+fun wrapMentions(context: Context, text: CharSequence, addClickable: Boolean = false, ownerId: Int = 0): SpannableStringBuilder {
     val ssb = SpannableStringBuilder()
     val pattern = Pattern.compile(REGEX_MENTION)
     val matcher = pattern.matcher(text)
@@ -270,19 +276,45 @@ fun wrapMentions(context: Context, text: CharSequence, addClickable: Boolean = f
         val start = matcher.start()
         val end = matcher.end()
 
-        val divider = mention.indexOf('|')
-        val mentionUi = mention.substring(divider + 1, mention.length - 1)
-        val userId = mention.substring(3, divider).toIntOrNull()
+        if(mention.indexOf('#')==0){
+            // если тег
 
-        ssb.append(text.substring(globalStart, start))
+            val divider = mention.indexOf('@')
+
+            var tag = mention
+            var screenName = ""
+            if(divider!= -1) {
+                screenName = mention.substring(divider + 1, mention.length)
+                tag = mention.substring(0, divider)
+            }
+            ssb.append(text.substring(globalStart, start))
+                .append(tag)
+            val tmp = ssb.toString()
+            if (addClickable) {
+                ssb.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        MainActivity.launch(context, tag, ownerId, screenName)
+                    }
+                }, tmp.length - tag.length, tmp.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }else{
+                ssb.setSpan(object : ForegroundColorSpan(Munch.color.color) {}, tmp.length - tag.length, tmp.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+        }else{
+            val divider = mention.indexOf('|')
+            val mentionUi = mention.substring(divider + 1, mention.length - 1)
+            val userId = mention.substring(3, divider).toIntOrNull()
+
+            ssb.append(text.substring(globalStart, start))
                 .append(mentionUi)
-        val tmp = ssb.toString()
-        if (userId != null && addClickable) {
-            ssb.setSpan(object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    ChatOwnerFactory.launch(context, userId)
-                }
-            }, tmp.length - mentionUi.length, tmp.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val tmp = ssb.toString()
+            if (userId != null && addClickable) {
+                ssb.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        ChatOwnerFactory.launch(context, userId)
+                    }
+                }, tmp.length - mentionUi.length, tmp.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         }
         globalStart = end
     }

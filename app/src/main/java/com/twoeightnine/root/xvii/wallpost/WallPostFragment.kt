@@ -20,6 +20,7 @@ package com.twoeightnine.root.xvii.wallpost
 
 import android.content.Context
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -30,9 +31,11 @@ import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.base.BaseFragment
 import com.twoeightnine.root.xvii.base.FragmentPlacementActivity.Companion.startFragment
+import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
 import com.twoeightnine.root.xvii.chats.attachments.AttachmentsInflater
 import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.model.Group
+import com.twoeightnine.root.xvii.model.User
 import com.twoeightnine.root.xvii.model.WallPost
 import com.twoeightnine.root.xvii.model.attachments.Doc
 import com.twoeightnine.root.xvii.model.attachments.Video
@@ -41,10 +44,7 @@ import com.twoeightnine.root.xvii.network.response.WallPostResponse
 import com.twoeightnine.root.xvii.report.ReportFragment
 import com.twoeightnine.root.xvii.uikit.XviiAvatar
 import com.twoeightnine.root.xvii.utils.*
-import global.msnthrp.xvii.uikit.extensions.applyBottomInsetPadding
-import global.msnthrp.xvii.uikit.extensions.hide
-import global.msnthrp.xvii.uikit.extensions.lowerIf
-import global.msnthrp.xvii.uikit.extensions.show
+import global.msnthrp.xvii.uikit.extensions.*
 import kotlinx.android.synthetic.main.content_wall_post.view.*
 import kotlinx.android.synthetic.main.content_wall_post.view.civAvatar
 import kotlinx.android.synthetic.main.fragment_wall_post.*
@@ -112,22 +112,55 @@ class WallPostFragment : BaseFragment() {
     }
 
     private fun putViews(holder: WallViewHolder, post: WallPost, level: Int = 0) {
-        val group = getGroup(-post.fromId)
+
+        var (title, avatar) = when{
+            post.fromId < 0 -> {
+                val group = getGroup(-post.fromId)
+                Pair(group.name, group.photo100)
+            }
+            else -> {
+                var user = getUser(post.fromId)
+                Pair(user.getTitle(), user.photo100)
+            }
+        }
+
         if (level == 0) {
-            xviiToolbar.tvChatTitle.text = group.name
+            xviiToolbar.tvChatTitle.text = title
             xviiToolbar.tvChatTitle.lowerIf(Prefs.lowerTexts)
 
-            xviiToolbar.civAvatar.load(group.photo100)
+            xviiToolbar.civAvatar.load(avatar)
             xviiToolbar.tvSubtitle.text = getTime(post.date, withSeconds = Prefs.showSeconds)
             holder.rlHeader.hide()
+
+            xviiToolbar.civAvatar.setOnClickListener {
+                ChatOwnerFactory.launch(context, post.fromId)
+            }
         } else {
-            holder.tvTitle.text = group.name
+            holder.tvTitle.text = title
             holder.tvTitle.lowerIf(Prefs.lowerTexts)
 
-            holder.civAvatar.load(group.photo100)
+            holder.civAvatar.load(avatar)
             holder.tvDate.text = getTime(post.date, withSeconds = Prefs.showSeconds)
+
+            holder.civAvatar.setOnClickListener {
+                ChatOwnerFactory.launch(context, post.fromId)
+            }
         }
-        holder.tvPost.text = post.text
+
+        val notEmpty = post.text?.isNotEmpty()?: false
+        if (notEmpty) {
+            val messageText = post.text?: ""
+            val preparedText = wrapMentions(requireContext(), messageText, addClickable = true, ownerId = post.ownerId)
+            holder.tvPost.text = when {
+                EmojiHelper.hasEmojis(messageText) -> EmojiHelper.getEmojied(requireContext(), messageText, preparedText)
+                else -> preparedText
+
+            }
+            holder.tvPost.movementMethod = LinkMovementMethod.getInstance()
+        }else{
+            holder.tvPost.setVisible(false)
+        }
+
         attachmentsInflater.createViewsFor(post)
                 .forEach(holder.llContainer::addView)
 
@@ -135,6 +168,7 @@ class WallPostFragment : BaseFragment() {
             fillContent(holder.llContainer)
             putViews(WallViewHolder(holder.llContainer), post.copyHistory[0], level + 1)
         }
+
     }
 
     private fun getGroup(fromId: Int): Group {
@@ -144,6 +178,16 @@ class WallPostFragment : BaseFragment() {
             }
         }
         return Group()
+    }
+
+
+    private fun getUser(fromId: Int): User {
+        for (user in postResponse.profiles) {
+            if (user.id == fromId) {
+                return user
+            }
+        }
+        return User()
     }
 
     private fun fillContent(root: ViewGroup) {

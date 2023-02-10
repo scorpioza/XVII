@@ -70,7 +70,7 @@ class AccountsViewModel(
         }) {
             updateRunningAccount()
         }
-        appDb.dialogsDao().removeAll()
+        appDb.dialogsDao().removeAll(SessionProvider.userId)
                 .compose(applyCompletableSchedulers())
                 .subscribe()
     }

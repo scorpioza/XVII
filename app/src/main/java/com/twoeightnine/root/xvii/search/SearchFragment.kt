@@ -22,11 +22,15 @@ import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.BuildConfig
 import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.base.BaseFragment
+import com.twoeightnine.root.xvii.base.FragmentPlacementActivity.Companion.startFragment
 import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
+import com.twoeightnine.root.xvii.chats.messages.chat.usual.ChatActivity
+import com.twoeightnine.root.xvii.main.MainActivity
 import com.twoeightnine.root.xvii.model.Wrapper
 import com.twoeightnine.root.xvii.uikit.Munch
 import com.twoeightnine.root.xvii.uikit.paint
@@ -34,6 +38,7 @@ import com.twoeightnine.root.xvii.utils.hideKeyboard
 import com.twoeightnine.root.xvii.utils.notifications.NotificationUtils
 import com.twoeightnine.root.xvii.utils.showError
 import com.twoeightnine.root.xvii.utils.subscribeSearch
+import com.twoeightnine.root.xvii.wallpost.WallPostFragment
 import global.msnthrp.xvii.data.dialogs.Dialog
 import global.msnthrp.xvii.uikit.extensions.applyBottomInsetPadding
 import global.msnthrp.xvii.uikit.extensions.applyTopInsetMargin
@@ -46,6 +51,22 @@ class SearchFragment : BaseFragment() {
     @Inject
     lateinit var viewModelFactory: SearchViewModel.Factory
     private lateinit var viewModel: SearchViewModel
+    var lastAdded: Int = 0
+
+    private val searchType by lazy {
+        SEARCH_TYPE.values()[arguments?.getInt(MainActivity.SEARCH_TYPE)?: SEARCH_TYPE.CHAT.ordinal]
+    }
+    private val searchString by lazy {
+        arguments?.getString(MainActivity.SEARCH_TEXT)
+    }
+
+    private val searchOwnerId by lazy {
+        arguments?.getInt(MainActivity.SEARCH_OWNER_ID)?: 0
+    }
+
+    private val searchScreenName by lazy {
+        arguments?.getString(MainActivity.SEARCH_SCREEN_NAME)?: ""
+    }
 
     private val adapter by lazy {
         SearchAdapter(requireContext(), ::onClick, ::onLongClick)
@@ -59,7 +80,14 @@ class SearchFragment : BaseFragment() {
         App.appComponent?.inject(this)
         viewModel = ViewModelProviders.of(this, viewModelFactory)[SearchViewModel::class.java]
 
+        viewModel.setFrom(searchType)
+        viewModel.setOwnerId(searchOwnerId)
+        viewModel.searchScreenName(searchScreenName)
         etSearch.subscribeSearch(true, viewModel::search)
+        searchString?.let {
+            etSearch.setText(it.toString())
+        }
+
         ivDelete.setOnClickListener { etSearch.setText("") }
         ivEmptyView.paint(Munch.color.color50)
 
@@ -77,7 +105,7 @@ class SearchFragment : BaseFragment() {
         viewModel.getResult().observe(viewLifecycleOwner, ::updateResults)
     }
 
-    private fun updateResults(data: Wrapper<ArrayList<Dialog>>) {
+    private fun updateResults(data: Wrapper<ArrayList<SearchDialog>>) {
         if (data.data != null) {
             adapter.update(data.data)
         } else {
@@ -85,12 +113,39 @@ class SearchFragment : BaseFragment() {
         }
     }
 
-    private fun onClick(dialog: Dialog) {
-        ChatOwnerFactory.launch(context, dialog.peerId)
+    private fun onClick(sDialog: SearchDialog) {
+        var dialog = Dialog(
+                peerId = sDialog.peerId,
+                messageId = sDialog.messageId,
+                title = sDialog.title,
+                text = sDialog.text,
+                photo = sDialog.photo,
+                isOnline = sDialog.isOnline,
+                isOut = sDialog.isOut
+            )
+        when(sDialog.type){
+            SEARCH_TYPE.CHAT -> ChatActivity.launch(context, dialog, true)
+            SEARCH_TYPE.FRIENDS -> ChatOwnerFactory.launch(context, dialog.peerId)
+            else -> {
+                val pid = "${dialog.peerId}_${dialog.messageId}"
+                context.startFragment<WallPostFragment>(WallPostFragment.createArgs(pid))
+            }
+        }
+
+
     }
 
-    private fun onLongClick(dialog: Dialog) {
+    private fun onLongClick(sDialog: SearchDialog) {
         if (BuildConfig.DEBUG) {
+            var dialog = Dialog(
+                peerId = sDialog.peerId,
+                messageId = sDialog.messageId,
+                title = sDialog.title,
+                text = sDialog.text,
+                photo = sDialog.photo,
+                isOnline = sDialog.isOnline,
+                isOut = sDialog.isOut
+            )
             NotificationUtils.showTestMessageNotification(requireContext(), dialog)
         }
     }
@@ -102,6 +157,7 @@ class SearchFragment : BaseFragment() {
             activity?.let { hideKeyboard(it) }
             false
         }
+        rvSearch.addOnScrollListener(SearchScrollListener())
         adapter.emptyView = llEmptyView
     }
 
@@ -109,4 +165,17 @@ class SearchFragment : BaseFragment() {
 
         fun newInstance() = SearchFragment()
     }
+
+    private inner class SearchScrollListener : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+
+            if (rvSearch!=null && lastAdded < adapter.itemCount - 1 &&
+                adapter.lastVisiblePosition(rvSearch.layoutManager) == adapter.itemCount - 1) {
+                viewModel.search(etSearch.text.toString(), adapter.itemCount)
+                lastAdded = adapter.itemCount - 1
+            }
+        }
+    }
+
 }

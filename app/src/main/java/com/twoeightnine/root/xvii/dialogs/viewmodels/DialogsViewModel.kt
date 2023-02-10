@@ -19,20 +19,25 @@
 package com.twoeightnine.root.xvii.dialogs.viewmodels
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.App.Companion.context
 import com.twoeightnine.root.xvii.background.longpoll.models.events.*
+import com.twoeightnine.root.xvii.groups.viewmodel.GroupsViewModel
 import com.twoeightnine.root.xvii.lg.L
 import com.twoeightnine.root.xvii.managers.Prefs
+import com.twoeightnine.root.xvii.model.Group
 import com.twoeightnine.root.xvii.model.WrappedLiveData
 import com.twoeightnine.root.xvii.model.WrappedMutableLiveData
 import com.twoeightnine.root.xvii.model.Wrapper
 import com.twoeightnine.root.xvii.network.ApiService
 import com.twoeightnine.root.xvii.network.response.BaseResponse
 import com.twoeightnine.root.xvii.network.response.ConversationsResponse
+import com.twoeightnine.root.xvii.storage.SessionProvider
 import com.twoeightnine.root.xvii.utils.*
 import global.msnthrp.xvii.data.db.AppDb
 import global.msnthrp.xvii.data.dialogs.Dialog
@@ -41,6 +46,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -61,6 +70,10 @@ class DialogsViewModel(
             MutableLiveData<HashSet<Int>>().apply { value = hashSetOf() }
     private val dialogsLiveData = WrappedMutableLiveData<ArrayList<Dialog>>()
 
+    private val starredLiveData = MutableLiveData<List<Group>>()
+
+    fun getStarred() = starredLiveData as LiveData<ArrayList<Group>>
+
     init {
         longPollSubscription?.dispose()
         longPollSubscription = EventBus.subscribeLongPollEventReceived(::onLongPollEventReceived)
@@ -74,7 +87,7 @@ class DialogsViewModel(
     fun loadDialogs(offset: Int = 0) {
         if (!isOnline()) {
             if (offset == 0) {
-                appDb.dialogsDao().getDialogs()
+                appDb.dialogsDao().getDialogs(SessionProvider.userId)
                         .compose(applySingleSchedulers())
                         .subscribe({ dialogs ->
                             dialogsLiveData.value = Wrapper(ArrayList(dialogs))
@@ -144,7 +157,14 @@ class DialogsViewModel(
         notifyDialogsChanged()
         saveDialogAsync(dialog)
     }
+    fun starDialog(d: Dialog) {
+        val dialog = dialogsLiveData.value?.data
+            ?.find { it.peerId == d.peerId } ?: return
 
+        dialog.isStarred = !dialog.isStarred
+        notifyDialogsChanged()
+        saveDialogAsync(dialog)
+    }
     fun addAlias(d: Dialog, alias: String) {
         val dialog = dialogsLiveData.value?.data
                 ?.find { it.peerId == d.peerId } ?: return
@@ -160,6 +180,7 @@ class DialogsViewModel(
         val muteList = Prefs.muteList
         getStoredDialogs { storedDialogs ->
             val pinnedIds = storedDialogs.filter { it.isPinned }.map { it.peerId }
+            val starredIds = storedDialogs.filter { it.isStarred }.map { it.peerId }
 
             response?.items?.forEach { dm ->
                 dm.lastMessage?.also { message ->
@@ -176,7 +197,9 @@ class DialogsViewModel(
                             response.isOnline(dm),
                             message.peerId in muteList,
                             message.peerId in pinnedIds,
-                            storedDialogs.find { it.peerId == message.peerId }?.alias
+                            message.peerId in starredIds,
+                            storedDialogs.find { it.peerId == message.peerId }?.alias,
+                            SessionProvider.userId
                     ))
                 }
             }
@@ -193,7 +216,7 @@ class DialogsViewModel(
 
     @SuppressLint("CheckResult")
     private fun getStoredDialogs(onLoaded: (List<Dialog>) -> Unit) {
-        appDb.dialogsDao().getDialogs()
+        appDb.dialogsDao().getDialogs(SessionProvider.userId)
                 .subscribe(onLoaded) {
                     it.printStackTrace()
                     lw("error loading stored: ${it.message}")
@@ -310,6 +333,7 @@ class DialogsViewModel(
 
     @SuppressLint("CheckResult")
     private fun saveDialogAsync(dialog: Dialog) {
+        dialog.me = SessionProvider.userId
         appDb.dialogsDao().insertDialog(dialog)
                 .compose(applyCompletableSchedulers())
                 .subscribe({
@@ -322,6 +346,7 @@ class DialogsViewModel(
 
     @SuppressLint("CheckResult")
     private fun removeDialog(dialog: Dialog) {
+        dialog.me = SessionProvider.userId
         appDb.dialogsDao().removeDialog(dialog)
                 .compose(applySingleSchedulers())
                 .subscribe({
@@ -363,6 +388,20 @@ class DialogsViewModel(
             is TypingChatEvent -> onTyping(event.peerId)
             is RecordingAudioEvent -> onTyping(event.peerId)
         }
+    }
+
+    fun loadStarred(){
+        val data = context.getSharedPreferences(GroupsViewModel.NAME+ SessionProvider.userId, Context.MODE_PRIVATE)
+        var starredIds = data.getStringSet(GroupsViewModel.STARRED, setOf<String>())
+
+        if(starredIds == null || starredIds.isEmpty()) return
+
+        api.getGroups(starredIds.joinToString())
+            .subscribeSmart({ groups ->
+                GlobalScope.launch {
+                    withContext(Dispatchers.Main){ starredLiveData.value = groups }
+                }
+            }, ::onErrorOccurred)
     }
 
     private fun l(s: String) {

@@ -177,7 +177,7 @@ class ChatOwnerViewModel : ViewModel() {
     @SuppressLint("CheckResult")
     fun loadAlias(peerId: Int) {
         appDb.dialogsDao()
-                .getDialogs(peerId)
+                .getDialogs(SessionProvider.userId, peerId)
                 .compose(applySingleSchedulers())
                 .onErrorReturnItem(Dialog())
                 .map { it.alias ?: "" }

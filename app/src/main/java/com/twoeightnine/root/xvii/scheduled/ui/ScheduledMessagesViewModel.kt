@@ -26,6 +26,7 @@ import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.background.longpoll.models.events.NewMessageEvent
 import com.twoeightnine.root.xvii.lg.L
 import com.twoeightnine.root.xvii.scheduled.core.SendMessageWorker
+import com.twoeightnine.root.xvii.storage.SessionProvider
 import com.twoeightnine.root.xvii.utils.EventBus
 import com.twoeightnine.root.xvii.utils.applySingleSchedulers
 import global.msnthrp.xvii.data.db.AppDb
@@ -100,7 +101,7 @@ class ScheduledMessagesViewModel : ViewModel() {
 
     private fun loadPeers(peerIds: List<Int>, onSuccess: (Map<Int, String>) -> Unit) {
         appDb.dialogsDao()
-                .getLargeListOfDialogs(peerIds)
+                .getLargeListOfDialogs(SessionProvider.userId, peerIds)
                 .map { dialogs -> dialogs.map { dialog -> dialog.peerId to dialog.aliasOrTitle } }
                 .map { pairList -> pairList.toMap() }
                 .compose(applySingleSchedulers())

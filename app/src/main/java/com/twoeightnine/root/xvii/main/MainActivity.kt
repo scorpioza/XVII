@@ -19,6 +19,7 @@
 package com.twoeightnine.root.xvii.main
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -32,6 +33,7 @@ import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.base.BaseActivity
 import com.twoeightnine.root.xvii.base.FragmentPlacementActivity.Companion.startFragment
 import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
+import com.twoeightnine.root.xvii.chats.attachments.base.BaseAttachmentsFragment
 import com.twoeightnine.root.xvii.chats.messages.chat.usual.ChatActivity
 import com.twoeightnine.root.xvii.dialogs.fragments.DialogsForwardFragment
 import com.twoeightnine.root.xvii.dialogs.fragments.DialogsFragment
@@ -49,6 +51,7 @@ import global.msnthrp.xvii.uikit.extensions.applyTopInsetMargin
 import global.msnthrp.xvii.uikit.extensions.isVisible
 import global.msnthrp.xvii.uikit.extensions.setVisible
 import kotlinx.android.synthetic.main.activity_main.*
+import com.twoeightnine.root.xvii.search.SEARCH_TYPE.*
 import javax.inject.Inject
 
 class MainActivity : BaseActivity() {
@@ -75,7 +78,14 @@ class MainActivity : BaseActivity() {
         StatTool.get()?.incLaunch()
 
         ivSearch.setOnClickListener {
-            startFragment<SearchFragment>()
+            var arguments = Bundle().apply {
+                if(bottomNavView.selectedItemId==R.id.menu_friends){
+                    putInt(SEARCH_TYPE, FRIENDS.ordinal)
+                }else{
+                    putInt(SEARCH_TYPE, CHAT.ordinal)
+                }
+            }
+            startFragment<SearchFragment>(arguments)
         }
         ivSearch.paint(Munch.color.color)
         ivSearch.applyTopInsetMargin()
@@ -87,6 +97,18 @@ class MainActivity : BaseActivity() {
                 view.layoutParams = this
             }
             insets
+        }
+
+        intent.extras?.let{extras->
+            extras.getString(SEARCH_TEXT)?.let{search->
+                var arguments = Bundle().apply {
+                    putInt(SEARCH_TYPE, extras.getInt(SEARCH_TYPE))
+                    putString(SEARCH_TEXT, search)
+                    putInt(SEARCH_OWNER_ID, extras.getInt(SEARCH_OWNER_ID))
+                    putString(SEARCH_SCREEN_NAME, extras.getString(SEARCH_SCREEN_NAME))
+                }
+                startFragment<SearchFragment>(arguments)
+            }
         }
     }
 
@@ -135,8 +157,24 @@ class MainActivity : BaseActivity() {
 
     companion object {
 
-        fun launch(context: Context?) {
-            launchActivity(context, MainActivity::class.java)
+        const val SEARCH_TEXT = "searchText"
+        const val SEARCH_OWNER_ID = "searchPeerID"
+        const val SEARCH_TYPE = "searchType"
+        const val SEARCH_SCREEN_NAME = "searchScreenName"
+
+        fun launch(context: Context?, search:String?= null, ownerId: Int=0, screenName:String="") {
+            if(search==null) {
+                launchActivity(context, MainActivity::class.java)
+            }else{
+                context?.startActivity(Intent(context, MainActivity::class.java).apply {
+                    putExtra(SEARCH_TEXT, search)
+                    putExtra(SEARCH_OWNER_ID, ownerId)
+                    putExtra(SEARCH_SCREEN_NAME, screenName)
+                    if(ownerId<0 || screenName.isNotEmpty()){
+                        putExtra(MainActivity.SEARCH_TYPE, GROUP.ordinal)
+                    }
+                })
+            }
         }
     }
 

@@ -28,6 +28,7 @@ import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.lg.L
 import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.network.ApiService
+import com.twoeightnine.root.xvii.storage.SessionProvider
 import com.twoeightnine.root.xvii.utils.NotificationChannels
 import global.msnthrp.xvii.data.db.AppDb
 import global.msnthrp.xvii.data.scheduled.ScheduledMessage
@@ -96,7 +97,7 @@ class SendMessageWorker(
             showNotification(success, notificationId = NOTIFICATION_ID, peer = null)
         } else {
             appDb.dialogsDao()
-                    .getDialogs(peerId)
+                    .getDialogs(SessionProvider.userId, peerId)
                     .subscribe({ dialog ->
                         val peer = dialog.aliasOrTitle.lowerIf(Prefs.lowerTexts)
                         showNotification(success, peerId, peer)

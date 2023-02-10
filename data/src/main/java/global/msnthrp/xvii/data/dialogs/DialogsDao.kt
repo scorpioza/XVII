@@ -25,17 +25,23 @@ import io.reactivex.Single
 @Dao
 interface DialogsDao {
 
-    @Query("SELECT * FROM dialogs ORDER BY isPinned DESC, timeStamp DESC")
-    fun getDialogs(): Single<List<Dialog>>
+    @Query("SELECT * FROM dialogs WHERE :me = me ORDER BY isPinned DESC, timeStamp DESC")
+    fun getDialogs(me: Int): Single<List<Dialog>>
 
-    @Query("SELECT * FROM dialogs WHERE :peerId = peerId")
-    fun getDialogs(peerId: Int): Single<Dialog>
+    @Query("SELECT * FROM dialogs WHERE :peerId = peerId AND :me = me")
+    fun getDialogs(me: Int, peerId: Int): Single<Dialog>
 
-    @Query("SELECT * FROM dialogs WHERE peerId IN (:peerIds)")
-    fun getDialogs(peerIds: List<Int>): Single<List<Dialog>>
+    @Query("SELECT * FROM dialogs WHERE peerId IN (:peerIds) AND :me = me")
+    fun getDialogs(me: Int, peerIds: List<Int>): Single<List<Dialog>>
 
-    @Query("SELECT peerId FROM dialogs WHERE isPinned = 1")
-    fun getPinned(): Single<List<Int>>
+    @Query("SELECT peerId FROM dialogs WHERE isPinned = 1 AND :me = me")
+    fun getPinned(me: Int): Single<List<Int>>
+
+    @Query("SELECT peerId FROM dialogs WHERE isStarred = 1 AND :me = me")
+    fun getStarred(me: Int): Single<List<Int>>
+
+    @Query("SELECT * FROM dialogs WHERE isStarred = 1 AND :me = me ORDER BY isPinned DESC, timeStamp DESC")
+    fun getStarredDialogs(me: Int): Single<List<Dialog>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertDialog(dialog: Dialog): Completable
@@ -46,14 +52,14 @@ interface DialogsDao {
     @Delete
     fun removeDialog(dialog: Dialog): Single<Int>
 
-    @Query("DELETE FROM dialogs where isPinned = 0 and alias = ''")
-    fun removeAll(): Completable
+    @Query("DELETE FROM dialogs where isPinned = 0 and alias = '' and :me = me")
+    fun removeAll(me: Int): Completable
 
-    fun getLargeListOfDialogs(peerIds: List<Int>): Single<List<Dialog>> {
+    fun getLargeListOfDialogs(me: Int, peerIds: List<Int>): Single<List<Dialog>> {
         return if (peerIds.size < 1000) {
-            getDialogs(peerIds)
+            getDialogs(me, peerIds)
         } else {
-            getDialogs().map { allDialogs ->
+            getDialogs(me).map { allDialogs ->
                 allDialogs.filter { it.peerId in peerIds }
             }
         }

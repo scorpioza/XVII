@@ -36,6 +36,7 @@ import com.twoeightnine.root.xvii.background.longpoll.receivers.KeyExchangeHandl
 import com.twoeightnine.root.xvii.lg.L
 import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.network.ApiService
+import com.twoeightnine.root.xvii.storage.SessionProvider
 import com.twoeightnine.root.xvii.utils.*
 import com.twoeightnine.root.xvii.utils.notifications.NotificationUtils
 import global.msnthrp.xvii.core.journal.JournalUseCase
@@ -426,7 +427,7 @@ class LongPollCore(private val context: Context) {
             peerId: Int,
             onSuccess: (Dialog) -> Unit,
             onFail: () -> Unit) {
-        appDb.dialogsDao().getDialogs(peerId)
+        appDb.dialogsDao().getDialogs(SessionProvider.userId, peerId)
                 .compose(applySingleSchedulers())
                 .subscribe(onSuccess) {
                     lw("loading from db error", it)

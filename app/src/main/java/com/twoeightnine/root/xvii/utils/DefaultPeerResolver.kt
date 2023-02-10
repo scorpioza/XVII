@@ -20,6 +20,7 @@ package com.twoeightnine.root.xvii.utils
 
 import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.network.ApiService
+import com.twoeightnine.root.xvii.storage.SessionProvider
 import global.msnthrp.xvii.core.utils.PeerResolver
 import global.msnthrp.xvii.data.db.AppDb
 import global.msnthrp.xvii.data.dialogs.Dialog
@@ -39,7 +40,7 @@ class DefaultPeerResolver : PeerResolver {
 
     override fun resolvePeers(peerIds: List<Int>): Map<Int, PeerResolver.ResolvedPeer> {
         val peers = appDb.dialogsDao()
-                .getLargeListOfDialogs(peerIds)
+                .getLargeListOfDialogs(SessionProvider.userId, peerIds)
                 .blockingGet()
                 .toResolvedPeers()
         val missingIds = peerIds.subtract(peers.map { it.peerId })

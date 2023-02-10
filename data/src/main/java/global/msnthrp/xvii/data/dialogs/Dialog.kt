@@ -24,9 +24,10 @@ import androidx.room.PrimaryKey
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-@Entity(tableName = "dialogs")
+//@Entity(tableName = "dialogs")
+@Entity(tableName = "dialogs", primaryKeys = ["peerId","me"])
 data class Dialog(
-        @PrimaryKey
+        //@PrimaryKey
         val peerId: Int = 0,
         var messageId: Int = 0,
         val title: String = "",
@@ -39,7 +40,9 @@ data class Dialog(
         var isOnline: Boolean = false,
         var isMute: Boolean = false,
         var isPinned: Boolean = false,
-        var alias: String? = null
+        var isStarred: Boolean = false,
+        var alias: String? = null,
+        var me: Int = 0,
 ) : Parcelable {
 
     val aliasOrTitle: String

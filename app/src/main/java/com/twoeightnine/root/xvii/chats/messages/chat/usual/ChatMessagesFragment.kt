@@ -19,10 +19,12 @@
 package com.twoeightnine.root.xvii.chats.messages.chat.usual
 
 import android.os.Bundle
+import android.os.Environment
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.BuildConfig
 import com.twoeightnine.root.xvii.R
@@ -34,10 +36,7 @@ import com.twoeightnine.root.xvii.lg.L
 import com.twoeightnine.root.xvii.lg.TextEventTransformer
 import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.model.attachments.Doc
-import com.twoeightnine.root.xvii.utils.ReportTool
-import com.twoeightnine.root.xvii.utils.getTime
-import com.twoeightnine.root.xvii.utils.matchesUserId
-import com.twoeightnine.root.xvii.utils.time
+import com.twoeightnine.root.xvii.utils.*
 import global.msnthrp.xvii.data.dialogs.Dialog
 import global.msnthrp.xvii.uikit.extensions.asText
 import kotlinx.android.synthetic.main.chat_input_panel.*
@@ -79,6 +78,10 @@ class ChatMessagesFragment : BaseChatMessagesFragment<ChatMessagesViewModel>() {
                 startFragment<AttachmentsFragment>(AttachmentsFragment.createArgs(peerId))
                 true
             }
+            R.id.menu_open_url -> {
+                BrowsingUtils.openUrl(context, CHAT_PEER_URL+peerId, ignoreNative = true)
+                true
+            }
             R.id.menu_secret_chat -> {
                 SecretChatActivity.launch(context, peerId, title, photo)
                 true
@@ -94,14 +97,33 @@ class ChatMessagesFragment : BaseChatMessagesFragment<ChatMessagesViewModel>() {
                         }
                 true
             }
+            R.id.menu_save_dialog -> {
+                val dir = context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?: context?.cacheDir
+                val file = File(dir, "${title}_${getTime(time(), false,
+                    false, false, DD_MM_YYYY + " " + HH_MM)}.txt")
+                viewModel.loadMessagesToSave(0, arrayListOf<String>()) { messages ->
+                    ReportTool()
+                        .addLogs(messages)
+                        .toFile(file) {
+                            onDocSelected(file.absolutePath)
+                            showToast(context, requireContext().getString(R.string.file_saved_to,
+                                dir.toString()), Toast.LENGTH_LONG)
+                        }
+                }
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+
     companion object {
 
+        const val CHAT_PEER_URL = "https://m.vk.com/im?sel=" //"https://m.vk.com/mail?act=show&chat="
+
         fun newInstance(dialog: Dialog, forwarded: String? = null,
-                        shareText: String? = null, shareImages: List<String> = emptyList()): ChatMessagesFragment {
+                        shareText: String? = null, shareImages: List<String> = emptyList(),
+                        search:Boolean = false): ChatMessagesFragment {
             val fragment = ChatMessagesFragment()
             fragment.arguments = Bundle().apply {
                 putInt(ARG_PEER_ID, dialog.peerId)
@@ -115,6 +137,9 @@ class ChatMessagesFragment : BaseChatMessagesFragment<ChatMessagesViewModel>() {
                 }
                 if (shareImages.isNotEmpty()) {
                     putStringArrayList(ARG_SHARE_IMAGE, ArrayList(shareImages))
+                }
+                if (search){
+                    putInt(ARG_MESSAGE_ID, dialog.messageId);
                 }
             }
             return fragment

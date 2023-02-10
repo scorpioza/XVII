@@ -26,6 +26,11 @@
         android:title="@string/attachments"
         app:showAsAction="never" />
     <item
+        android:id="@+id/menu_open_url"
+        android:icon="@drawable/ic_back"
+        android:title="@string/open_in_browser"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/menu_secret_chat"
         android:icon="@drawable/ic_start_secret_chat_white"
         android:title="@string/encryption"
@@ -34,6 +39,9 @@
         android:id="@+id/menu_attach_logs"
         android:title="@string/attach_logs"
         app:showAsAction="never" />
-
+    <item
+        android:id="@+id/menu_save_dialog"
+        android:title="@string/save_dialog"
+        app:showAsAction="never" />
 
 </menu>

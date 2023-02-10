@@ -146,6 +146,13 @@ interface ApiService {
             @Query("start_from") startFrom: String?
     ): Flowable<BaseResponse<AttachmentsResponse>>
 
+    @GET("messages.search?extended=1")
+    fun search(
+        @Query("q") q: String,
+        @Query("count") count: Int,
+        @Query("offset") offset: Int,
+        @Query("fields") fields: String = User.FIELDS
+    ): Flowable<BaseResponse<SearchResponse>>
 
     @GET("messages.searchConversations?extended=1")
     fun searchConversations(
@@ -287,6 +294,15 @@ interface ApiService {
     fun isGroupMember(@Query("group_id") groupId: Int,
                       @Query("user_id") userId: Int): Flowable<BaseResponse<Int>>
 
+    @GET("groups.get?extended=1")
+    fun getGroupList(
+        //@Query("user_id") userId: Int,
+        @Query("count") count: Int = 1,
+        @Query("offset") offset: Int = 0,
+        @Query("fields") fields: String = Group.FIELDS
+    ): Flowable<BaseResponse<ListResponse<Group>>>
+
+
     //account
 
     @GET("account.setOffline")
@@ -375,6 +391,23 @@ interface ApiService {
     @GET("wall.getById?extended=1")
     fun getWallPostById(@Query("posts") posts: String): Flowable<BaseResponse<WallPostResponse>>
 
+    @GET("wall.get?extended=1")
+    fun getWall(
+        @Query("owner_id") ownerId: Int,
+        @Query("count") count: Int = 1,
+        @Query("offset") offset: Int = 0,
+        @Query("fields") fields: String = Group.FIELDS+","+User.FIELDS
+    ): Flowable<BaseResponse<WallPostResponse>>
+
+    @GET("wall.search?extended=1")
+    fun wallSearch(
+            @Query("owner_id") ownerId: Int,
+            @Query("domain") domain: String,
+            @Query("query") q: String,
+            @Query("count") count: Int,
+            @Query("offset") offset: Int,
+            @Query("fields") fields: String = Group.FIELDS+","+User.FIELDS
+    ): Flowable<BaseResponse<WallPostResponse>>
 
     @GET("wall.repost")
     fun repost(@Query("object") obj: String): Flowable<BaseResponse<JSONObject>>
