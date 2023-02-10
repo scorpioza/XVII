@@ -18,6 +18,7 @@
 
 package com.twoeightnine.root.xvii.utils
 
+import ClickableForegroundColorSpan
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
@@ -291,7 +292,7 @@ fun wrapMentions(context: Context, text: CharSequence, addClickable: Boolean = f
                 .append(tag)
             val tmp = ssb.toString()
             if (addClickable) {
-                ssb.setSpan(object : ClickableSpan() {
+                ssb.setSpan(object : ClickableForegroundColorSpan(Munch.color.color) {
                     override fun onClick(widget: View) {
                         MainActivity.launch(context, tag, ownerId, screenName)
                     }
