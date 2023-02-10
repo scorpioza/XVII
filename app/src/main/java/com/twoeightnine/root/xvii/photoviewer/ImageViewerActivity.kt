@@ -27,6 +27,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.text.method.ScrollingMovementMethod
 import android.util.Size
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -204,6 +205,7 @@ class ImageViewerActivity : AppCompatActivity() {
             val text = currentPhoto.text
             tvText.setVisible(!text.isNullOrEmpty())
             tvText.text = text
+            tvText.setMovementMethod(ScrollingMovementMethod())
             tvDate.text = getTime(currentPhoto.date, withSeconds = Prefs.showSeconds)
         }
     }

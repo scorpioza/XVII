@@ -68,9 +68,9 @@ class WallAdapter(
 
     private val defaultRadius = resources.getDimensionPixelSize(R.dimen.default_radius)
 
-    private val defaultRadiusMin = SizeUtils.pxFromDp(context, 10)
+    private val defaultRadiusMin = SizeUtils.pxFromDp(context, 4)
 
-    private val picturesSpacing = SizeUtils.pxFromDp(context, 5)
+    private val picturesSpacing = SizeUtils.pxFromDp(context, 3)
 
     private val videoWidth = resources.getDimensionPixelSize(R.dimen.chat_message_video_width)
     private val videoHeight = resources.getDimensionPixelSize(R.dimen.chat_message_video_height)

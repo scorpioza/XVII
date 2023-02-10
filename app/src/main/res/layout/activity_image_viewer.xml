@@ -98,6 +98,8 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:textSize="16sp"
+                android:maxHeight = "150sp"
+                android:scrollbars = "vertical"
                 tools:text="the freedom is not to do what you want but not to do what you dont want" />
 
             <LinearLayout
