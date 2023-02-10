@@ -187,6 +187,13 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".background.longpoll.services.NotificationReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="zug" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".background.longpoll.services.NotificationService"
             android:exported="false" />
@@ -234,5 +241,12 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
 
 </manifest>

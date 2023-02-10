@@ -27,7 +27,7 @@ ext {
     androidVersions = [
             minSdkVersion    : 23,
             targetSdkVersion : 30,
-            compileSdkVersion: 30,
+            compileSdkVersion: 31,
             buildToolsVersion: '30.0.0'
     ]
 
@@ -36,7 +36,7 @@ ext {
             javaVersion       : "1.8",
 
             roomVersion       : "2.2.5",
-            workManagerVersion: "2.4.0",
+            workManagerVersion: "2.7.0",
             retrofitVersion   : "2.5.0",
             okHttpVersion     : "4.9.0",
             lifecycleVersion  : "2.2.0",

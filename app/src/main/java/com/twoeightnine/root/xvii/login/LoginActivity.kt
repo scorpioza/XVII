@@ -19,6 +19,7 @@
 package com.twoeightnine.root.xvii.login
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -33,6 +34,8 @@ import androidx.lifecycle.Observer
 import com.twoeightnine.root.xvii.App
 import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.background.longpoll.LongPollStorage
+import com.twoeightnine.root.xvii.background.longpoll.services.NotificationReceiver
+import com.twoeightnine.root.xvii.background.longpoll.services.NotificationWorker
 import com.twoeightnine.root.xvii.base.BaseActivity
 import com.twoeightnine.root.xvii.main.MainActivity
 import com.twoeightnine.root.xvii.managers.Prefs
@@ -58,6 +61,8 @@ class LoginActivity : BaseActivity() {
 
         viewModel.accountCheckResult.observe(this, Observer(::onAccountChecked))
         viewModel.accountUpdated.observe(this, Observer(::onAccountUpdated))
+
+        NotificationWorker.launch(this)
 
         initLoginView()
 
@@ -206,6 +211,7 @@ class LoginActivity : BaseActivity() {
         App.appComponent?.inject(this)
         LongPollStorage.clear()
         startNotificationService(this)
+        NotificationReceiver.launch(this)
         when (Prefs.fakeAppType) {
             SecurityFragment.FakeAppType.ALARMS ->
                 AlarmActivity.launch(this)

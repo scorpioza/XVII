@@ -100,6 +100,7 @@ object NotificationUtils {
                 .setSmallIcon(R.drawable.shape_transparent)
                 .setContentTitle(service.getString(R.string.xvii_longpoll))
                 .setContentText(service.getString(R.string.longpoll_hint))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
         service.startForeground(9999, notification)
     }
