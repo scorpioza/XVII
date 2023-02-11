@@ -19,6 +19,7 @@
 package com.twoeightnine.root.xvii.groups.adapters
 
 import android.content.Context
+import android.text.method.LinkMovementMethod
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -27,7 +28,10 @@ import com.twoeightnine.root.xvii.base.BaseReachAdapter
 import com.twoeightnine.root.xvii.extensions.getInitials
 import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.model.Group
+import com.twoeightnine.root.xvii.utils.EmojiHelper
+import com.twoeightnine.root.xvii.utils.wrapMentions
 import global.msnthrp.xvii.uikit.extensions.lowerIf
+import kotlinx.android.synthetic.main.item_chat_owner_field.view.*
 import kotlinx.android.synthetic.main.item_group.view.*
 
 class GroupsAdapter(context: Context,
@@ -59,6 +63,14 @@ class GroupsAdapter(context: Context,
                 tvName.text = group.name
                 tvName.lowerIf(Prefs.lowerTexts)
                 tvInfo.text = group.description
+
+                if(tvInfo.text.isNotEmpty()) {
+                    val preparedText = wrapMentions(context, tvInfo.text.toString())
+                    tvInfo.text = when {
+                        EmojiHelper.hasEmojis(tvInfo.text.toString()) -> EmojiHelper.getEmojied(context, tvInfo.text.toString(), preparedText)
+                        else -> preparedText
+                    }
+                }
 
                 setOnClickListener {
                     items.getOrNull(adapterPosition)?.also(onClick)

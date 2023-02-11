@@ -28,14 +28,17 @@ import com.twoeightnine.root.xvii.base.BaseFragment
 import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
 import com.twoeightnine.root.xvii.friends.adapters.FriendsAdapter
 import com.twoeightnine.root.xvii.friends.viewmodel.FriendsViewModel
+import com.twoeightnine.root.xvii.groups.fragments.GroupsFragment
 import com.twoeightnine.root.xvii.model.User
 import com.twoeightnine.root.xvii.model.Wrapper
 import com.twoeightnine.root.xvii.utils.AppBarLifter
+import com.twoeightnine.root.xvii.utils.BrowsingUtils
 import com.twoeightnine.root.xvii.utils.showError
 import global.msnthrp.xvii.uikit.extensions.applyBottomInsetPadding
 import global.msnthrp.xvii.uikit.extensions.hide
 import global.msnthrp.xvii.uikit.extensions.show
 import kotlinx.android.synthetic.main.fragment_friends.*
+import kotlinx.android.synthetic.main.toolbar2.*
 import javax.inject.Inject
 
 class FriendsFragment : BaseFragment() {
@@ -67,6 +70,10 @@ class FriendsFragment : BaseFragment() {
             adapter.reset()
             adapter.startLoading()
         }
+
+        tvToolbarTitle.setOnClickListener{
+            BrowsingUtils.openUrl(context, FRIENDS_URL, ignoreNative = true)
+        }
         rvFriends.applyBottomInsetPadding()
     }
 
@@ -95,6 +102,8 @@ class FriendsFragment : BaseFragment() {
     }
 
     companion object {
+        const val FRIENDS_URL = "https://m.vk.com/friends"
+
         fun newInstance() = FriendsFragment()
     }
 }

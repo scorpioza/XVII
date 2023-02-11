@@ -20,6 +20,7 @@ package com.twoeightnine.root.xvii.chatowner.fragments
 
 import android.app.Activity
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.util.DisplayMetrics
 import android.view.View
 import androidx.annotation.DrawableRes
@@ -38,10 +39,7 @@ import com.twoeightnine.root.xvii.model.attachments.Photo
 import com.twoeightnine.root.xvii.photoviewer.ImageViewerActivity
 import com.twoeightnine.root.xvii.uikit.Munch
 import com.twoeightnine.root.xvii.uikit.paint
-import com.twoeightnine.root.xvii.utils.BrowsingUtils
-import com.twoeightnine.root.xvii.utils.copyToClip
-import com.twoeightnine.root.xvii.utils.showError
-import com.twoeightnine.root.xvii.utils.showToast
+import com.twoeightnine.root.xvii.utils.*
 import com.twoeightnine.root.xvii.views.RateAlertDialog
 import global.msnthrp.xvii.uikit.extensions.*
 import kotlinx.android.synthetic.main.fragment_chat_owner.ivAvatar
@@ -176,7 +174,19 @@ abstract class BaseChatOwnerFragment<T : ChatOwner> : BaseFragment() {
                 ivIcon.setImageResource(icon)
                 ivIcon.paint(Munch.color.color)
             }
-            tvValue.text = text.toLowerCase()
+
+            tvValue.text = text
+            tvValue.lowerIf(Prefs.lowerTexts)
+            //tvValue.text = text.toLowerCase()
+            if(text.isNotEmpty()) {
+                val preparedText = wrapMentions(context, tvValue.text.toString(), addClickable = true)
+                tvValue.text = when {
+                    EmojiHelper.hasEmojis(tvValue.text.toString()) -> EmojiHelper.getEmojied(context, tvValue.text.toString(), preparedText)
+                    else -> preparedText
+                }
+                tvValue.movementMethod = LinkMovementMethod.getInstance()
+            }
+
             onClick?.also {
                 rlItem.setOnClickListener { onClick(text) }
             }

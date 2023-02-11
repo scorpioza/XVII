@@ -42,6 +42,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="@dimen/profile_margin_end"
         android:layout_toEndOf="@+id/ivIcon"
+        android:autoLink="web"
+        android:textColorHighlight="@android:color/transparent"
+        android:textColorLink="@color/link_color"
         android:textSize="15sp"
         tools:text="value dfdfd fdfdfd fdfdfd df fdf dfd fd fdf dfvdfdfd fdfdfd df fdf dfd fd fdf dfValue dfdfd fdfdfd fdfdfd df fdf dfd fd fdf dfValue dfdfd fdfdfd fdfdfd df fdf dfd fd fdf df" />
 

@@ -23,27 +23,23 @@ import android.view.View
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.twoeightnine.root.xvii.App
-import com.twoeightnine.root.xvii.BuildConfig
 import com.twoeightnine.root.xvii.R
 import com.twoeightnine.root.xvii.base.BaseFragment
 import com.twoeightnine.root.xvii.chatowner.ChatOwnerFactory
-import com.twoeightnine.root.xvii.chats.messages.chat.secret.SecretChatActivity
 import com.twoeightnine.root.xvii.groups.adapters.GroupsAdapter
 import com.twoeightnine.root.xvii.groups.viewmodel.GroupsViewModel
-import com.twoeightnine.root.xvii.managers.Prefs
 import com.twoeightnine.root.xvii.model.Group
 import com.twoeightnine.root.xvii.model.Wrapper
-import com.twoeightnine.root.xvii.utils.*
+import com.twoeightnine.root.xvii.utils.AppBarLifter
+import com.twoeightnine.root.xvii.utils.BrowsingUtils
 import com.twoeightnine.root.xvii.utils.contextpopup.ContextPopupItem
 import com.twoeightnine.root.xvii.utils.contextpopup.createContextPopup
-import com.twoeightnine.root.xvii.utils.notifications.NotificationUtils
-import com.twoeightnine.root.xvii.views.TextInputAlertDialog
-import global.msnthrp.xvii.data.dialogs.Dialog
+import com.twoeightnine.root.xvii.utils.showError
 import global.msnthrp.xvii.uikit.extensions.applyBottomInsetPadding
 import global.msnthrp.xvii.uikit.extensions.hide
 import global.msnthrp.xvii.uikit.extensions.show
 import kotlinx.android.synthetic.main.fragment_groups.*
-import kotlinx.android.synthetic.main.fragment_wall.*
+import kotlinx.android.synthetic.main.toolbar2.*
 import javax.inject.Inject
 
 class GroupsFragment : BaseFragment() {
@@ -74,6 +70,10 @@ class GroupsFragment : BaseFragment() {
             viewModel.loadGroups()
             adapter.reset()
             adapter.startLoading()
+        }
+
+        tvToolbarTitle.setOnClickListener{
+            BrowsingUtils.openUrl(context, GROUPS_URL, ignoreNative = true)
         }
         rvGroups.applyBottomInsetPadding()
     }
@@ -118,6 +118,9 @@ class GroupsFragment : BaseFragment() {
     }
 
     companion object {
+
+        const val GROUPS_URL = "https://m.vk.com/groups"
+
         fun newInstance() = GroupsFragment()
     }
 }
