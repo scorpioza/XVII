@@ -23,13 +23,25 @@
     android:background="@color/popup"
     android:elevation="4dp">
 
+    <ImageView
+        android:id="@+id/closeBtn"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/ic_close_with_circle" />
+
     <EditText
         android:id="@+id/etComment"
         style="@style/MainText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:inputType="textCapSentences|textMultiLine"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:layout_marginTop="20dp"
         android:background="@android:color/transparent"
         android:fontFamily="sans-serif-light"
         android:maxLines="12"

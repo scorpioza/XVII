@@ -97,7 +97,7 @@ object NotificationUtils {
                 .setOngoing(true)
                 .setVibrate(null)
                 .setSound(null)
-                .setSmallIcon(R.drawable.shape_transparent)
+                .setSmallIcon(R.drawable.ic_star)
                 .setContentTitle(service.getString(R.string.xvii_longpoll))
                 .setContentText(service.getString(R.string.longpoll_hint))
                 .build()

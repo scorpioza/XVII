@@ -108,9 +108,9 @@ class ChatInputController(
                         }
                     }
                 }
-                !Prefs.lowerTexts -> {
-                    etInput.inputType = etInput.inputType or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-                }
+                //!Prefs.lowerTexts -> {
+                    //etInput.inputType = etInput.inputType or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                //}
             }
             val micListener = MicTouchListener()
             ivMic.setOnTouchListener(micListener)

@@ -23,6 +23,8 @@ import android.content.DialogInterface
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.twoeightnine.root.xvii.R
+import com.twoeightnine.root.xvii.uikit.Munch
+import com.twoeightnine.root.xvii.uikit.paint
 import com.twoeightnine.root.xvii.utils.stylize
 import global.msnthrp.xvii.uikit.extensions.asText
 import kotlinx.android.synthetic.main.dialog_comment.view.*
@@ -39,12 +41,19 @@ class TextInputAlertDialog(
         with(view) {
             etComment.hint = hint
             etComment.setText(presetText)
+            etComment.setSelection(etComment.text.length)
+            closeBtn.setOnClickListener({
+                dismiss()
+            })
+            closeBtn.paint(Munch.color.color)
         }
         setView(view)
         setButton(DialogInterface.BUTTON_POSITIVE, context.getString(R.string.ok)) { _, _ ->
             onCommentAdded(view.etComment.asText())
             dismiss()
         }
+        setCanceledOnTouchOutside(false)
+        setCancelable(false)
     }
 
     override fun show() {
